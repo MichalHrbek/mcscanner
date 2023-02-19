@@ -2,8 +2,8 @@
 using System.IO;
 using mcscanner;
 
-string inpath = @"C:\Users\hppcp\Downloads\mcscanner\ips";
-string outpath = @"C:\Users\hppcp\Downloads\mcscanner\results";
+string inpath = @"ips";
+string outpath = @"results";
 int threadCount = 10;
 int waitms = 500;
 
