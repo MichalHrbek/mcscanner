@@ -14,7 +14,7 @@ using (StreamWriter writer = new StreamWriter(outpath))
 	while (!sp.done)
 	{
         Console.WriteLine($"Succes: {sp.successful}; Error: {sp.unsuccessful}; Total: {sp.successful + sp.unsuccessful} / {ips.Length / 6}");
-        while (sp.output.Count !=0)
+        while (sp.output.Count != 0)
         {
             writer.WriteLine(sp.output.Dequeue());
         }

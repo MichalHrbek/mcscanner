@@ -68,7 +68,7 @@ namespace mcscanner
                     return;
                 }
                 var ip = host.Item1.ToString();
-                var port = (short)host.Item2;
+                var port = host.Item2;
                 var response = "null";
                 try
                 {
@@ -84,7 +84,7 @@ namespace mcscanner
 
         }
 
-        string getStatus(string ip, short port, int waitms)
+        string getStatus(string ip, ushort port, int waitms)
         {
             NetworkStream _stream;
             List<byte> _buffer;
@@ -107,7 +107,7 @@ namespace mcscanner
              */
             WriteVarInt(47);
             WriteString(ip);
-            WriteShort(port);
+            WriteUShort(port);
             WriteVarInt(1);
             Flush(0);
 
@@ -125,7 +125,7 @@ namespace mcscanner
                 var length = ReadVarInt(buffer);
                 var packet = ReadVarInt(buffer);
                 var jsonLength = ReadVarInt(buffer);
-                var json = ReadString(buffer, jsonLength).Split("\"favicon\"")[0].Replace("\0", "");
+                var json = ReadString(buffer, jsonLength).Split("\"favicon\"")[0].Split("\"modinfo\"")[0].Replace("\0", "");
                 successful++;
                 return json;
             }
@@ -187,6 +187,11 @@ namespace mcscanner
             }
 
             void WriteShort(short value)
+            {
+                _buffer.AddRange(BitConverter.GetBytes(value));
+            }
+
+            void WriteUShort(ushort value)
             {
                 _buffer.AddRange(BitConverter.GetBytes(value));
             }
