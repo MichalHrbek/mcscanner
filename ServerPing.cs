@@ -8,11 +8,12 @@ namespace mcscanner
 {
     class HostList
     {
-        private int i = 0;
+        private int i;
         private byte[] ips;
-        public HostList(byte[] ips) 
+        public HostList(byte[] ips, int start = 0) 
         {
             this.ips = ips;
+            i = start * 6;
         }
         public (IPAddress, ushort) nextHost()
         {
@@ -78,8 +79,9 @@ namespace mcscanner
                 {
                     unsuccessful++;
                 }
-                
-                output.Enqueue($"{ip}:{port};{response}");
+                lock(output) {
+                    output.Enqueue($"{ip}:{port};{response}");
+                }
             }
 
         }
