@@ -15,13 +15,13 @@ namespace mcscanner
             this.ips = ips;
             i = start * 6;
         }
-        public (IPAddress, ushort) nextHost()
+        public (IPAddress?, ushort) nextHost()
         {
             lock(this)
             {
                 if (i >= ips.Length)
                 {
-                    return (IPAddress.None, 0);
+                    return (null, 0);
                 }
                 var ip = new IPAddress(new Span<byte>(ips, i, 4));
                 var port = BinaryPrimitives.ReadUInt16BigEndian(new Span<byte>(ips, i + 4, 2));
@@ -43,10 +43,10 @@ namespace mcscanner
 
         public ServerPing(HostList  hostList, int threadCount, int waitms)
         {
+            this.hostList = hostList;
+            this.waitms = waitms;
             for (int i = 0; i < threadCount; i++)
             {
-                this.hostList = hostList;
-                this.waitms = waitms;
                 Thread thread1 = new Thread(new ThreadStart(start));
                 thread1.Start();
                 workThread++;
@@ -55,11 +55,10 @@ namespace mcscanner
 
         void start()
         {
-            
             while (true)
             {
-                (IPAddress, ushort) host = hostList.nextHost();
-                if (host.Item1 == IPAddress.None)
+                (IPAddress?, ushort) host = hostList.nextHost();
+                if (host.Item1 == null)
                 {
                     if (Interlocked.Decrement(ref workThread) == 0)
                     {
@@ -77,13 +76,12 @@ namespace mcscanner
                 }
                 catch (Exception)
                 {
-                    unsuccessful++;
+                    Interlocked.Increment(ref unsuccessful);
                 }
                 lock(output) {
                     output.Enqueue($"{ip}:{port};{response}");
                 }
             }
-
         }
 
         string getStatus(string ip, ushort port, int waitms)
@@ -96,7 +94,7 @@ namespace mcscanner
 
             if (!client.Connected)
             {
-                unsuccessful++;
+                Interlocked.Increment(ref unsuccessful);
                 return "null";
             }
 
@@ -127,8 +125,8 @@ namespace mcscanner
                 var length = ReadVarInt(buffer);
                 var packet = ReadVarInt(buffer);
                 var jsonLength = ReadVarInt(buffer);
-                var json = ReadString(buffer, jsonLength).Split("\"favicon\"")[0].Split("\"modinfo\"")[0].Replace("\0", "");
-                successful++;
+                var json = ReadString(buffer, jsonLength).Split("\"favicon\"")[0].Split("\"modinfo\"")[0].Split("\"forgeData\"")[0].Replace("\0", "");
+                Interlocked.Increment(ref successful);
                 return json;
             }
             catch (IOException ex)
@@ -137,7 +135,7 @@ namespace mcscanner
                  * If an IOException is thrown then the server didn't 
                  * send us a VarInt or sent us an invalid one.
                  */
-                unsuccessful++;
+                Interlocked.Increment(ref unsuccessful);
                 return "null";
             }
             #region Read/Write methods
